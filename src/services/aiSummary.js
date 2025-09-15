@@ -1,24 +1,25 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const OpenAI = require('openai');
 
 class AISummaryService {
   constructor() {
-    this.apiKey = process.env.GEMINI_API_KEY;
+    this.apiKey = process.env.DEEPSEEK_API_KEY;
 
-    if (this.apiKey && this.apiKey !== 'your_gemini_api_key_here') {
-      this.genAI = new GoogleGenerativeAI(this.apiKey);
-      this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-      console.log('✅ Gemini API 已初始化');
+    if (this.apiKey && this.apiKey !== 'your_deepseek_api_key_here' && this.apiKey.startsWith('sk-')) {
+      this.client = new OpenAI({
+        apiKey: this.apiKey,
+        baseURL: 'https://api.deepseek.com',
+      });
+      console.log('✅ DeepSeek API 已初始化');
     } else {
-      console.log('⚠️  Gemini API密钥未配置，将使用模拟数据');
-      this.genAI = null;
-      this.model = null;
+      console.log('⚠️  DeepSeek API密钥未配置，将使用模拟数据');
+      this.client = null;
     }
   }
 
   async generateSummary(content, title = '') {
     try {
-      // 如果没有配置Gemini API，使用模拟数据
-      if (!this.model) {
+      // 如果没有配置DeepSeek API，使用模拟数据
+      if (!this.client) {
         return this.generateMockSummary(content, title);
       }
 
@@ -41,10 +42,19 @@ ${content}
 - 使用简洁易懂的语言
 - 如果内容质量不高或信息不足，请如实说明`;
 
-      const result = await this.model.generateContent(prompt);
-      const response = result.response;
-      const text = response.text();
+      const response = await this.client.chat.completions.create({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+      });
 
+      const text = response.choices[0].message.content;
       return this.parseSummaryResponse(text);
 
     } catch (error) {
@@ -53,7 +63,7 @@ ${content}
       } else if (error.status === 400) {
         throw new Error('请求参数错误，请检查内容格式');
       } else if (error.status === 401) {
-        throw new Error('API密钥无效，请检查Gemini账户');
+        throw new Error('API密钥无效，请检查DeepSeek账户');
       }
       throw new Error(`AI摘要生成失败: ${error.message}`);
     }
@@ -66,7 +76,7 @@ ${content}
 
     return {
       keyPoints: [
-        "这是一个演示版本的摘要，实际使用需要配置OpenAI API密钥",
+        "这是一个演示版本的摘要，实际使用需要配置DeepSeek API密钥",
         "文章包含约 " + words.length + " 个词汇",
         "内容结构完整，具有一定的信息价值",
         "建议配置真实的AI服务以获得更好的摘要效果"
@@ -75,7 +85,7 @@ ${content}
       tags: ["演示", "测试", "AI摘要", "速读酱", "MVP"],
       oneSentenceSummary: "这是一个演示性质的AI摘要，展示了速读酱的基本功能和界面。",
       credibilityScore: 85,
-      rawResponse: "模拟数据 - 请配置Gemini API密钥以获得真实的AI摘要"
+      rawResponse: "模拟数据 - 请配置DeepSeek API密钥以获得真实的AI摘要"
     };
   }
 

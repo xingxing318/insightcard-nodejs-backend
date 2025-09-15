@@ -1,10 +1,10 @@
+const dotenv = require('dotenv');
+dotenv.config();
+
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const path = require('path');
 const summaryController = require('./src/controllers/summaryController');
-
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
