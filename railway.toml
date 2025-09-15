@@ -1,6 +1,6 @@
 [build]
 # 指定 Node.js 版本
-nixpkgs = "nodejs-20_x"
+nixpkgs = ["nodejs-20_x", "npm-10_x"]
 
 [deploy]
 # 启动命令
