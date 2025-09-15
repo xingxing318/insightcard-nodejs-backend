@@ -37,8 +37,8 @@
 3. **配置环境变量**
    ```bash
    cp .env .env.local
-   # 编辑 .env 文件，配置 Gemini API 密钥
-   GEMINI_API_KEY=your_gemini_api_key_here
+   # 编辑 .env 文件，配置 DeepSeek API 密钥
+   DEEPSEEK_API_KEY=your_deepseek_api_key_here
    ```
 
 4. **启动项目**
@@ -125,7 +125,7 @@ insightcard-nodejs-backend/
 ## 🔧 技术栈
 
 - **后端**: Node.js + Express
-- **AI服务**: Google Gemini 2.0 Flash
+- **AI服务**: DeepSeek API
 - **内容解析**: Cheerio + Axios
 - **前端**: HTML5 + CSS3 + JavaScript (原生)
 - **工具**: nodemon, dotenv
@@ -149,15 +149,15 @@ insightcard-nodejs-backend/
 
 ## ⚙️ 配置说明
 
-### Google Gemini API配置
-1. 访问 [Google AI Studio](https://makersuite.google.com/app/apikey) 获取API密钥
+### DeepSeek API配置
+1. 访问 [DeepSeek开放平台](https://platform.deepseek.com/) 获取API密钥
 2. 在 `.env` 文件中配置:
    ```
-   GEMINI_API_KEY=AIzaxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    ```
 
 ### 模拟模式
-如果没有配置Gemini API密钥，系统会自动使用模拟数据进行演示，您可以：
+如果没有配置DeepSeek API密钥，系统会自动使用模拟数据进行演示，您可以：
 - 体验完整的界面交互
 - 查看摘要卡片的展示效果
 - 测试API接口的基本功能

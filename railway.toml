@@ -1,0 +1,13 @@
+[build]
+# Railway 自动检测 Node.js 项目，无需额外配置
+
+[deploy]
+# 启动命令
+startCommand = "npm start"
+
+# 健康检查路径
+healthcheckPath = "/health"
+
+# 超时设置
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
