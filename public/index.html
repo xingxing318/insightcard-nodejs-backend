@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>速读酱 - AI阅读摘要助理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main {
+            padding: 40px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .summary-card {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 5px solid #667eea;
+        }
+
+        .summary-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .summary-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .credibility-score {
+            background: #4CAF50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .summary-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: "●";
+            margin-right: 10px;
+        }
+
+        .key-points {
+            list-style: none;
+        }
+
+        .key-points li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .key-points li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .quotes {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #FF9800;
+        }
+
+        .quote {
+            font-style: italic;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .quote::before {
+            content: """;
+            font-size: 3em;
+            color: #FF9800;
+            position: absolute;
+            left: -20px;
+            top: -10px;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tag {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .one-sentence {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .metadata {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f2ff;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>速读酱</h1>
+            <p>AI阅读摘要助理 - 用1/10的时间获取90%的核心价值</p>
+        </div>
+
+        <div class="main">
+            <div class="input-section">
+                <div class="input-tabs">
+                    <button class="tab active" onclick="switchTab('url')">URL链接</button>
+                    <button class="tab" onclick="switchTab('text')">文本内容</button>
+                </div>
+
+                <div id="url-tab" class="tab-content active">
+                    <div class="input-group">
+                        <label for="url">请输入文章链接</label>
+                        <input type="url" id="url" placeholder="例如：https://mp.weixin.qq.com/s/...">
+                    </div>
+                </div>
+
+                <div id="text-tab" class="tab-content">
+                    <div class="input-group">
+                        <label for="text">请粘贴文章内容</label>
+                        <textarea id="text" placeholder="请在此粘贴需要摘要的文本内容..."></textarea>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="generateSummary()">
+                    生成AI摘要
+                </button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>正在分析内容并生成摘要...</p>
+            </div>
+
+            <div class="result" id="result">
+                <!-- 结果将在这里显示 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'url';
+
+        function switchTab(tab) {
+            currentTab = tab;
+
+            // 更新选项卡样式
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+
+            // 显示对应内容
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.getElementById(`${tab}-tab`).classList.add('active');
+        }
+
+        async function generateSummary() {
+            const submitBtn = document.querySelector('.submit-btn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+
+            // 获取输入内容
+            let data = {};
+            if (currentTab === 'url') {
+                const url = document.getElementById('url').value.trim();
+                if (!url) {
+                    alert('请输入URL链接');
+                    return;
+                }
+                data.url = url;
+            } else {
+                const text = document.getElementById('text').value.trim();
+                if (!text) {
+                    alert('请输入文本内容');
+                    return;
+                }
+                data.text = text;
+            }
+
+            // 显示加载状态
+            submitBtn.disabled = true;
+            submitBtn.textContent = '生成中...';
+            loading.style.display = 'block';
+            result.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/summary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const responseData = await response.json();
+
+                if (responseData.success) {
+                    displayResult(responseData.data);
+                } else {
+                    showError(responseData.message);
+                }
+
+            } catch (error) {
+                showError('网络错误，请重试');
+                console.error('Error:', error);
+            } finally {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                submitBtn.textContent = '生成AI摘要';
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayResult(data) {
+            const result = document.getElementById('result');
+
+            const html = `
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <div class="summary-title">${data.source.title}</div>
+                        <div class="credibility-score">可信度: ${data.summary.credibilityScore}分</div>
+                    </div>
+
+                    <div class="summary-section">
+                        <div class="section-title">核心观点</div>
+                        <ul class="key-points">
+                            ${data.summary.keyPoints.map(point => `<li>${point}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    ${data.summary.quotes.length > 0 ? `
+                    <div class="summary-section">
+                        <div class="section-title">金句摘录</div>
+                        <div class="quotes">
+                            ${data.summary.quotes.map(quote => `<div class="quote">${quote}</div>`).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div class="summary-section">
+                        <div class="section-title">关键词标签</div>
+                        <div class="tags">
+                            ${data.summary.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+
+                    <div class="summary-section">
+                        <div class="section-title">一句话总结</div>
+                        <div class="one-sentence">${data.summary.oneSentenceSummary}</div>
+                    </div>
+
+                    <div class="metadata">
+                        📊 原文 ${data.source.wordCount} 字，预计阅读 ${data.source.estimatedReadTime} 分钟 |
+                        ⏱️ 为您节省 ${data.metadata.timeSaved} 分钟 |
+                        🕒 生成时间 ${new Date(data.metadata.generatedAt).toLocaleString()}
+                    </div>
+                </div>
+            `;
+
+            result.innerHTML = html;
+            result.style.display = 'block';
+        }
+
+        function showError(message) {
+            const result = document.getElementById('result');
+            result.innerHTML = `<div class="error">❌ ${message}</div>`;
+            result.style.display = 'block';
+        }
+
+        // 回车提交
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                generateSummary();
+            }
+        });
+    </script>
+</body>
+</html>
