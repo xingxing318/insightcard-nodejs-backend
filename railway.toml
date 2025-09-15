@@ -1,5 +1,6 @@
 [build]
-# Railway 自动检测 Node.js 项目，无需额外配置
+# 指定 Node.js 版本
+nixpkgs = "nodejs-20_x"
 
 [deploy]
 # 启动命令
